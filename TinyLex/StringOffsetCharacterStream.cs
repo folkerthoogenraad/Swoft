@@ -27,15 +27,19 @@ namespace TinyLex
             return InputData[Offset];
         }
 
-        public char Next()
+        public void Next()
         {
             Offset++;
-            return Current();
         }
 
         public bool HasNext()
         {
             return Offset < InputData.Length - 1;
+        }
+
+        public bool HasCurrent()
+        {
+            return Offset < InputData.Length;
         }
 
         public ICharacterStream Fork()

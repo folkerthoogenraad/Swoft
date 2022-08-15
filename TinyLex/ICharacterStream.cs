@@ -10,8 +10,9 @@ namespace TinyLex
     {
         public int Offset { get; }
         public char Current();
-        public char Next();
+        public void Next();
         public bool HasNext();
+        public bool HasCurrent();
         public char Next(int count);
         public ICharacterStream Fork();
     }

@@ -76,14 +76,20 @@ void HelloWorld()
 
 void Test2()
 {
-    Func<string, string> identity = s => s;
-    Lexer<string> lexer = new Lexer<string>();
+    Lexer<Token> lexer = new Lexer<Token>();
 
-    lexer.AddAnyOff(c => char.IsWhiteSpace(c)).SetCreator(identity);
-    lexer.AddAnyOff(c => char.IsLetter(c)).SetCreator(identity);
-    lexer.AddAnyOff(c => char.IsNumber(c)).SetCreator(identity);
+    // Whitespace etc
+    //lexer.SequenceOf(char.IsWhiteSpace).Creates(data => new Token(TokenType.Whitespace, data));
+    //lexer.OpenClose("//", "\n").Creates(data => new Token(TokenType.Comment, data));
+    //lexer.OpenClose("/*", "*/").Creates(data => new Token(TokenType.Comment, data));
+    lexer.OpenClose("\"", "\"", "\\").Creates(data => new Token(TokenType.String, data));
 
-    var result = lexer.Tokenize("hello my name is 43 and im 54324 year old");
+    //lexer.SequenceOf(char.IsLetterOrDigit).StartsWith(char.IsLetter).Creates(data => new Token(TokenType.Identifier, data));
+
+    //lexer.SequenceOf(char.IsDigit).Creates(data => new Token(TokenType.Integer, data));
+
+    var result = lexer.Tokenize("\"this is a string with \\\"escaped\\\" characters.\"");
+    //var result = lexer.Tokenize("this");
 
     if (!result.Succeeded)
     {
@@ -97,8 +103,30 @@ void Test2()
     {
         Console.WriteLine(token);
     }
+
+    Console.WriteLine("And with filters");
+
+    foreach (var token in result.Tokens.Where(x => x.Type != TokenType.Whitespace && x.Type != TokenType.Comment))
+    {
+        Console.WriteLine(token);
+    }
 }
 
 Test2();
 
-public record MyToken(string Data);
+public enum TokenType
+{
+    Keyword,
+    Operator,
+
+    String,
+
+    Integer,
+    Float,
+
+    Identifier,
+    
+    Whitespace,
+    Comment,
+}
+public record Token(TokenType Type, string Data);

@@ -64,6 +64,12 @@ namespace TinyLex
                 Debug.Assert(result.Token != null);
 
                 tokens.Add(result.Token);
+
+                if(result.Offset <= offset)
+                {
+                    throw new ApplicationException($"Tokenizer ({ result.Tokenizer.GetType() }) is functioning incorrectly! A token is never allowed to consume 0 or fewer characters.");
+                }
+
                 offset = result.Offset;
             }
 
@@ -80,7 +86,10 @@ namespace TinyLex
             {
                 token = tokenizer.Tokenize(stream);
             }
-            catch { }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
 
             return new TokenizerOutput(tokenizer, stream, token);
         }

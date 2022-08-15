@@ -9,6 +9,19 @@ namespace TinyLex
         public TToken? Tokenize(ICharacterStream stream);
     }
 
+    public static class ITokenizerExtensions
+    {
+        public static TToken? TryTokenize<TToken>(this ITokenizer<TToken> tokenizer, ICharacterStream stream)
+            where TToken: class
+        {
+            try
+            {
+                return tokenizer.Tokenize(stream);
+            }
+            catch { throw; }
+        }
+    }
+
     public abstract class SimpleTokenizer<TToken>: ITokenizer<TToken>
         where TToken : class
     {
@@ -65,9 +78,9 @@ namespace TinyLex
     {
         public ITokenizer<string> OpenTokenizer { get; set; }
         public ITokenizer<string> CloseTokenizer { get; set; }
-        public ITokenizer<string> EscapeTokenizer { get; set; }
+        public ITokenizer<string>? EscapeTokenizer { get; set; }
 
-        public OpenCloseTokenizer(ITokenizer<string> open, ITokenizer<string> close, ITokenizer<string> escape)
+        public OpenCloseTokenizer(ITokenizer<string> open, ITokenizer<string> close, ITokenizer<string>? escape = null)
         {
             OpenTokenizer = open;
             CloseTokenizer = close;
@@ -76,17 +89,18 @@ namespace TinyLex
 
         public override TToken? Tokenize(ICharacterStream stream)
         {
-            var openResult = OpenTokenizer.Tokenize(stream);
+            var openResult = OpenTokenizer.TryTokenize(stream);
 
             if (openResult == null) return null;
 
             StringBuilder builder = new StringBuilder();
 
             builder.Append(openResult);
+            stream.Next();
 
-            while (true)
+            while (stream.HasCurrent())
             {
-                var escapeResult = CloseTokenizer.Tokenize(stream.Fork());
+                var escapeResult = EscapeTokenizer?.TryTokenize(stream.Fork());
 
                 if (escapeResult != null)
                 {
@@ -96,10 +110,11 @@ namespace TinyLex
                     continue;
                 }
 
-                var closeResult = CloseTokenizer.Tokenize(stream.Fork());
+                var closeResult = CloseTokenizer.TryTokenize(stream.Fork());
 
                 if(closeResult != null)
                 {
+                    stream.Next(closeResult.Length);
                     builder.Append(closeResult);
                     break;
                 }
@@ -130,28 +145,41 @@ namespace TinyLex
         }
     }
 
-    public class AnyOffTokenizer<TToken> : SimpleTokenizer<TToken>
+    public class SequenceTokenizer<TToken> : SimpleTokenizer<TToken>
         where TToken : class
     {
-        public Func<char, bool> Matcher { get; set; }
+        private Func<char, bool> _matcher;
+        private Func<char, bool>? _startsWith;
 
-        public AnyOffTokenizer(Func<char, bool> matcher)
+        public SequenceTokenizer(Func<char, bool> matcher)
         {
-            Matcher = matcher;
+            _matcher = matcher;
+        }
+
+        public SequenceTokenizer<TToken> StartsWith(Func<char, bool> startingFunc)
+        {
+            _startsWith = startingFunc;
+            return this;
         }
 
         public override TToken? Tokenize(ICharacterStream stream)
         {
-            if (!Matcher(stream.Current()))
+            if(_startsWith != null && !_startsWith(stream.Current()))
+            {
+                return null;
+            }
+
+            else if (!_matcher(stream.Current()))
             {
                 return null;
             }
 
             StringBuilder builder = new StringBuilder();
 
-            while (Matcher(stream.Current()))
+            while (stream.HasCurrent() && _matcher(stream.Current()))
             {
                 builder.Append(stream.Current());
+
                 stream.Next();
             }
 
@@ -161,16 +189,15 @@ namespace TinyLex
 
     public static class SimpleTokenizerExtensions
     {
-        public static T SetCreator<T, TToken>(this T tokenizer, Func<string, TToken> creator)
+        public static T Creates<T, TToken>(this T tokenizer, Func<string, TToken> creator)
             where T : SimpleTokenizer<TToken>
             where TToken : class
         {
             tokenizer.Creator = creator;
             return tokenizer;
         }
-        public static T SetPrecedence<T, TToken>(this T tokenizer, int precedence)
-            where T : SimpleTokenizer<TToken>
-            where TToken : class
+        public static SimpleTokenizer<T> WithPrecedence<T>(this SimpleTokenizer<T> tokenizer, int precedence)
+            where T : class
         {
             tokenizer.Precedence = precedence;
             return tokenizer;
@@ -180,24 +207,31 @@ namespace TinyLex
     // TODO split these off into seperate extension methods
     public static class LexerTokenizerExtensions
     {
-        public static AnyOffTokenizer<TToken> AddAnyOff<TToken>(this Lexer<TToken> lexer, Func<char, bool> matcher)
+        public static SequenceTokenizer<TToken> SequenceOf<TToken>(this Lexer<TToken> lexer, Func<char, bool> matcher)
             where TToken : class
         {
-            return lexer.AddTokenizer(new AnyOffTokenizer<TToken>(matcher));
+            return lexer.AddTokenizer(new SequenceTokenizer<TToken>(matcher));
         }
 
-        public static LiteralTokenizer<TToken> AddLiteral<TToken>(this Lexer<TToken> lexer, string literal)
+        public static LiteralTokenizer<TToken> Literal<TToken>(this Lexer<TToken> lexer, string literal)
             where TToken : class
         {
             return lexer.AddTokenizer(new LiteralTokenizer<TToken>(literal));
         }
-        public static OpenCloseTokenizer<TToken> AddOpenClose<TToken>(this Lexer<TToken> lexer, string open, string close, string escape)
+        public static OpenCloseTokenizer<TToken> OpenClose<TToken>(this Lexer<TToken> lexer, string open, string close, string escape)
             where TToken : class
         {
             return lexer.AddTokenizer(new OpenCloseTokenizer<TToken>(
-                open: new LiteralTokenizer<string>(open).SetCreator(x => x),
-                close: new LiteralTokenizer<string>(close).SetCreator(x => x),
-                escape: new LiteralTokenizer<string>(escape).SetCreator(x => x)));
+                open: new LiteralTokenizer<string>(open).Creates(x => x),
+                close: new LiteralTokenizer<string>(close).Creates(x => x),
+                escape: new LiteralTokenizer<string>(escape).Creates(x => x)));
+        }
+        public static OpenCloseTokenizer<TToken> OpenClose<TToken>(this Lexer<TToken> lexer, string open, string close)
+            where TToken : class
+        {
+            return lexer.AddTokenizer(new OpenCloseTokenizer<TToken>(
+                open: new LiteralTokenizer<string>(open).Creates(x => x),
+                close: new LiteralTokenizer<string>(close).Creates(x => x)));
         }
     }
 
