@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swoft", "Swoft\Swoft.csproj", "{EA0A5A22-75EC-4C2C-B5AE-AAA891458D4F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Swoft", "Swoft\Swoft.csproj", "{EA0A5A22-75EC-4C2C-B5AE-AAA891458D4F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swoft.CLI", "Swoft.CLI\Swoft.CLI.csproj", "{08524ACB-C37D-4E00-A56C-A8B0DA58798E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Swoft.CLI", "Swoft.CLI\Swoft.CLI.csproj", "{08524ACB-C37D-4E00-A56C-A8B0DA58798E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TinyLex", "TinyLex\TinyLex.csproj", "{6C1DFAEB-3B1C-463F-88B7-0AC16D74B811}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{08524ACB-C37D-4E00-A56C-A8B0DA58798E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08524ACB-C37D-4E00-A56C-A8B0DA58798E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08524ACB-C37D-4E00-A56C-A8B0DA58798E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C1DFAEB-3B1C-463F-88B7-0AC16D74B811}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C1DFAEB-3B1C-463F-88B7-0AC16D74B811}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C1DFAEB-3B1C-463F-88B7-0AC16D74B811}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C1DFAEB-3B1C-463F-88B7-0AC16D74B811}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

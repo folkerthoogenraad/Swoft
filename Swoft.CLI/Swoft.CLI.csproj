@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Swoft\Swoft.csproj" />
+    <ProjectReference Include="..\TinyLex\TinyLex.csproj" />
   </ItemGroup>
 	<PropertyGroup>
 		<RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">$(NETCoreSdkRuntimeIdentifier)</RuntimeIdentifier>

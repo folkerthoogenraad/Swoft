@@ -1,5 +1,6 @@
 ﻿
 using LLVMSharp;
+using TinyLex;
 
 void Test()
 {
@@ -73,4 +74,31 @@ void HelloWorld()
 
 }
 
-HelloWorld();
+void Test2()
+{
+    Func<string, string> identity = s => s;
+    Lexer<string> lexer = new Lexer<string>();
+
+    lexer.AddAnyOff(c => char.IsWhiteSpace(c)).SetCreator(identity);
+    lexer.AddAnyOff(c => char.IsLetter(c)).SetCreator(identity);
+    lexer.AddAnyOff(c => char.IsNumber(c)).SetCreator(identity);
+
+    var result = lexer.Tokenize("hello my name is 43 and im 54324 year old");
+
+    if (!result.Succeeded)
+    {
+        foreach(var error in result.Errors)
+        {
+            Console.WriteLine(error.Message);
+        }
+    }
+
+    foreach (var token in result.Tokens)
+    {
+        Console.WriteLine(token);
+    }
+}
+
+Test2();
+
+public record MyToken(string Data);
