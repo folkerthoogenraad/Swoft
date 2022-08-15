@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31919.166
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swoft", "Swoft\Swoft.csproj", "{EA0A5A22-75EC-4C2C-B5AE-AAA891458D4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swoft.CLI", "Swoft.CLI\Swoft.CLI.csproj", "{08524ACB-C37D-4E00-A56C-A8B0DA58798E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA0A5A22-75EC-4C2C-B5AE-AAA891458D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA0A5A22-75EC-4C2C-B5AE-AAA891458D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA0A5A22-75EC-4C2C-B5AE-AAA891458D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA0A5A22-75EC-4C2C-B5AE-AAA891458D4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08524ACB-C37D-4E00-A56C-A8B0DA58798E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08524ACB-C37D-4E00-A56C-A8B0DA58798E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08524ACB-C37D-4E00-A56C-A8B0DA58798E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08524ACB-C37D-4E00-A56C-A8B0DA58798E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DD5A07C4-5F6B-4124-9EB9-6EA2B3D8511B}
+	EndGlobalSection
+EndGlobal
