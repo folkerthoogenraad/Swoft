@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TinyLex
 {
-    public class Lexer<TToken>
+    public class DefaultLexer<TToken>
         where TToken : class
     {
         private record TokenizerOutput(ITokenizer<TToken> Tokenizer, IStringSpanIterator Stream, TToken? Token)
@@ -19,9 +19,9 @@ namespace TinyLex
 
         private List<ITokenizer<TToken>> _tokenizers;
         private IEnumerable<ITokenizer<TToken>> Tokenizers => _tokenizers;
-        private Func<string, TToken?>? _default;
+        private Func<TokenInfo, TToken?>? _default;
 
-        public Lexer()
+        public DefaultLexer()
         {
             _tokenizers = new List<ITokenizer<TToken>>();
         }
@@ -39,7 +39,7 @@ namespace TinyLex
             _tokenizers.Remove(tokenizer);
         }
 
-        public void SetErrorProcessor(Func<string, TToken?>? func)
+        public void SetErrorProcessor(Func<TokenInfo, TToken?>? func)
         {
             _default = func;
         }
@@ -64,7 +64,7 @@ namespace TinyLex
                 {
                     errors.Add(new LexerError(offset, $"Unknown character '{input[offset]}' No matching token found."));
 
-                    var def = _default?.Invoke("" + input[offset]);
+                    var def = _default?.Invoke(new TokenInfo("" + input[offset], offset, 0, 0)); // TODO line and column
 
                     if(def != null)
                     {

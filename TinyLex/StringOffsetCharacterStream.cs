@@ -9,12 +9,19 @@ namespace TinyLex
     public class StringOffsetCharacterStream : IStringSpanIterator
     {
         public string InputData { get; set; }
+        
+        public int StartingOffset { get; set; }
+        public int StartingLine { get; set; }
+        public int StartingColumn { get; set; }
+
         public int Offset { get; set; }
 
         public StringOffsetCharacterStream(string inputData, int offset)
         {
             InputData = inputData;
+            StartingOffset = offset;
             Offset = offset;
+            // TODO starting line and column.
         }
 
         public char Current()
@@ -45,7 +52,13 @@ namespace TinyLex
 
         public IStringSpanIterator Fork()
         {
-            return new StringOffsetCharacterStream(InputData, Offset);
+            return new StringOffsetCharacterStream(InputData, Offset)
+            {
+                // Copy the starting values
+                StartingOffset = StartingOffset,
+                StartingLine = StartingLine,
+                StartingColumn = StartingColumn,
+            };
         }
 
         public bool Next(int count)

@@ -8,6 +8,10 @@ namespace TinyLex
 {
     public interface IStringSpanIterator
     {
+        public int StartingOffset { get; }
+        public int StartingLine { get; }
+        public int StartingColumn { get; }
+
         public int Offset { get; }
         public char Current();
         public bool Next();

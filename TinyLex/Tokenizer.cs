@@ -26,18 +26,18 @@ namespace TinyLex
         where TToken : class
     {
         public int Precedence { get; set; } = 0;
-        public Func<string, TToken>? Creator { get; set; }
+        public Func<TokenInfo, TToken>? Creator { get; set; }
 
         public abstract TToken? Tokenize(IStringSpanIterator stream);
 
-        protected TToken Create(string data)
+        protected TToken Create(string data, IStringSpanIterator stream)
         {
             if(Creator == null)
             {
                 throw new ApplicationException("No creator registered in tokenizer. Did you add the creator?");
             }
 
-            return Creator(data);
+            return Creator(new TokenInfo(data, stream.StartingOffset, stream.StartingLine, stream.StartingColumn));
         }
 
         // TODO this is kinda ugly, we should move this.
@@ -64,12 +64,14 @@ namespace TinyLex
 
         public override TToken? Tokenize(IStringSpanIterator stream)
         {
+            int offset = stream.Offset;
+
             if (!MatchLiteral(stream, Literal))
             {
                 return null;
             }
 
-            return Create(Literal);
+            return Create(Literal, stream);
         }
     }
 
@@ -122,7 +124,7 @@ namespace TinyLex
                 stream.Next();
             }
 
-            return Create(builder.ToString());
+            return Create(builder.ToString(), stream);
         }
     }
 
@@ -144,7 +146,7 @@ namespace TinyLex
 
             if (res == null) return null;
 
-            return Create(res);
+            return Create(res, stream);
         }
     }
 
@@ -186,13 +188,13 @@ namespace TinyLex
                 stream.Next();
             }
 
-            return Create(builder.ToString());
+            return Create(builder.ToString(), stream);
         }
     }
 
     public static class SimpleTokenizerExtensions
     {
-        public static T Creates<T, TToken>(this T tokenizer, Func<string, TToken> creator)
+        public static T Becomes<T, TToken>(this T tokenizer, Func<TokenInfo, TToken> creator)
             where T : SimpleTokenizer<TToken>
             where TToken : class
         {
@@ -210,38 +212,38 @@ namespace TinyLex
     // TODO split these off into seperate extension methods
     public static class LexerTokenizerExtensions
     {
-        public static SequenceTokenizer<TToken> SequenceOf<TToken>(this Lexer<TToken> lexer, Func<char, bool> matcher)
+        public static SequenceTokenizer<TToken> SequenceOf<TToken>(this DefaultLexer<TToken> lexer, Func<char, bool> matcher)
             where TToken : class
         {
             return lexer.AddTokenizer(new SequenceTokenizer<TToken>(matcher));
         }
 
-        public static LiteralTokenizer<TToken> Literal<TToken>(this Lexer<TToken> lexer, string literal)
+        public static LiteralTokenizer<TToken> Literal<TToken>(this DefaultLexer<TToken> lexer, string literal)
             where TToken : class
         {
             return lexer.AddTokenizer(new LiteralTokenizer<TToken>(literal));
         }
 
-        public static LamdaTokenizer<TToken> Lambda<TToken>(this Lexer<TToken> lexer, Func<IStringSpanIterator, string?> func)
+        public static LamdaTokenizer<TToken> Lambda<TToken>(this DefaultLexer<TToken> lexer, Func<IStringSpanIterator, string?> func)
             where TToken : class
         {
             return lexer.AddTokenizer(new LamdaTokenizer<TToken>(func));
         }
 
-        public static OpenCloseTokenizer<TToken> OpenClose<TToken>(this Lexer<TToken> lexer, string open, string close, string escape)
+        public static OpenCloseTokenizer<TToken> OpenClose<TToken>(this DefaultLexer<TToken> lexer, string open, string close, string escape)
             where TToken : class
         {
             return lexer.AddTokenizer(new OpenCloseTokenizer<TToken>(
-                open: new LiteralTokenizer<string>(open).Creates(x => x),
-                close: new LiteralTokenizer<string>(close).Creates(x => x),
-                escape: new LiteralTokenizer<string>(escape).Creates(x => x)));
+                open: new LiteralTokenizer<string>(open).Becomes(x => x.Data),
+                close: new LiteralTokenizer<string>(close).Becomes(x => x.Data),
+                escape: new LiteralTokenizer<string>(escape).Becomes(x => x.Data)));
         }
-        public static OpenCloseTokenizer<TToken> OpenClose<TToken>(this Lexer<TToken> lexer, string open, string close)
+        public static OpenCloseTokenizer<TToken> OpenClose<TToken>(this DefaultLexer<TToken> lexer, string open, string close)
             where TToken : class
         {
             return lexer.AddTokenizer(new OpenCloseTokenizer<TToken>(
-                open: new LiteralTokenizer<string>(open).Creates(x => x),
-                close: new LiteralTokenizer<string>(close).Creates(x => x)));
+                open: new LiteralTokenizer<string>(open).Becomes(x => x.Data),
+                close: new LiteralTokenizer<string>(close).Becomes(x => x.Data)));
         }
     }
 

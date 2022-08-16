@@ -12,6 +12,10 @@
     <PackageReference Include="LLVMSharp" Version="5.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TinyLex\TinyLex.csproj" />
+  </ItemGroup>
+
 	<PropertyGroup>
 		<RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">$(NETCoreSdkRuntimeIdentifier)</RuntimeIdentifier>
 	</PropertyGroup>
