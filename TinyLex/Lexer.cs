@@ -10,7 +10,7 @@ namespace TinyLex
     public class Lexer<TToken>
         where TToken : class
     {
-        private record TokenizerOutput(ITokenizer<TToken> Tokenizer, ICharacterStream Stream, TToken? Token)
+        private record TokenizerOutput(ITokenizer<TToken> Tokenizer, IStringSpanIterator Stream, TToken? Token)
         {
             public int Precedence => Tokenizer.Precedence;
             public bool Succeeded => Token != null;
@@ -19,6 +19,7 @@ namespace TinyLex
 
         private List<ITokenizer<TToken>> _tokenizers;
         private IEnumerable<ITokenizer<TToken>> Tokenizers => _tokenizers;
+        private Func<string, TToken?>? _default;
 
         public Lexer()
         {
@@ -36,6 +37,11 @@ namespace TinyLex
         public void RemoveTokenizer(ITokenizer<TToken> tokenizer)
         {
             _tokenizers.Remove(tokenizer);
+        }
+
+        public void SetErrorProcessor(Func<string, TToken?>? func)
+        {
+            _default = func;
         }
 
         public LexerOutput<TToken> Tokenize(string input)
@@ -57,6 +63,14 @@ namespace TinyLex
                 if (result == null || !result.Succeeded)
                 {
                     errors.Add(new LexerError(offset, $"Unknown character '{input[offset]}' No matching token found."));
+
+                    var def = _default?.Invoke("" + input[offset]);
+
+                    if(def != null)
+                    {
+                        tokens.Add(def);
+                    }
+                    
                     offset++;
                     continue;
                 }

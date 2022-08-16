@@ -1,5 +1,7 @@
 ﻿
 using LLVMSharp;
+using System.Diagnostics;
+using System.Text;
 using TinyLex;
 
 void Test()
@@ -71,25 +73,122 @@ void HelloWorld()
     LLVM.DisposeBuilder(builder);
     LLVM.DisposeModule(module);
     LLVM.ContextDispose(context);
+}
 
+string? LexFloat(IStringSpanIterator stream)
+{
+    if (!char.IsDigit(stream.Current()))
+    {
+        return null;
+    }
+
+    StringBuilder builder = new StringBuilder();
+
+    builder.Append(stream.Current());
+
+    while (stream.Next() && char.IsDigit(stream.Current()))
+    {
+        builder.Append(stream.Current());
+    }
+
+    if(!stream.HasCurrent() || stream.Current() != '.')
+    {
+        return builder.ToString();
+    }
+
+    Debug.Assert(stream.Current() == '.');
+    builder.Append('.');
+
+    while (stream.Next() && char.IsDigit(stream.Current()))
+    {
+        builder.Append(stream.Current());
+    }
+
+    return builder.ToString();
+    
 }
 
 void Test2()
 {
     Lexer<Token> lexer = new Lexer<Token>();
 
+    // Error setup
+    lexer.SetErrorProcessor(data => new Token(TokenType.Unknown, data));
+
     // Whitespace etc
-    //lexer.SequenceOf(char.IsWhiteSpace).Creates(data => new Token(TokenType.Whitespace, data));
-    //lexer.OpenClose("//", "\n").Creates(data => new Token(TokenType.Comment, data));
-    //lexer.OpenClose("/*", "*/").Creates(data => new Token(TokenType.Comment, data));
-    lexer.OpenClose("\"", "\"", "\\").Creates(data => new Token(TokenType.String, data));
+    lexer.SequenceOf(char.IsWhiteSpace).Creates(data => new Token(TokenType.Whitespace, data));
 
-    //lexer.SequenceOf(char.IsLetterOrDigit).StartsWith(char.IsLetter).Creates(data => new Token(TokenType.Identifier, data));
+    // Keywords
+    lexer.Literal("function").Creates(data => new Token(TokenType.Keyword, data));
+    lexer.Literal("class").Creates(data => new Token(TokenType.Keyword, data));
+    lexer.Literal("struct").Creates(data => new Token(TokenType.Keyword, data));
+    
+    // Identfiers
+    lexer.SequenceOf(char.IsLetterOrDigit)
+        .StartsWith(char.IsLetter)
+        .Creates(data => new Token(TokenType.Identifier, data));
 
-    //lexer.SequenceOf(char.IsDigit).Creates(data => new Token(TokenType.Integer, data));
+    // Operators, etc
+    lexer.Literal("(").Creates(d => new Token(TokenType.BracketOpen, d));
+    lexer.Literal(")").Creates(d => new Token(TokenType.BracketClose, d));
+    lexer.Literal("[").Creates(d => new Token(TokenType.ArrayOpen, d));
+    lexer.Literal("]").Creates(d => new Token(TokenType.ArrayClose, d));
+    lexer.Literal("{").Creates(d => new Token(TokenType.CurlyOpen, d));
+    lexer.Literal("}").Creates(d => new Token(TokenType.CurlyClose, d));
 
-    var result = lexer.Tokenize("\"this is a string with \\\"escaped\\\" characters.\"");
-    //var result = lexer.Tokenize("this");
+    lexer.Literal("+").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("-").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("*").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("/").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("%").Creates(d => new Token(TokenType.BinaryOperator, d));
+
+    lexer.Literal("=").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("+=").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("-=").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("*=").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("/=").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("%=").Creates(d => new Token(TokenType.BinaryOperator, d));
+
+    lexer.Literal("==").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal(">").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("<").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal(">=").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("<=").Creates(d => new Token(TokenType.BinaryOperator, d));
+
+    lexer.Literal("||").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("&&").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("!").Creates(d => new Token(TokenType.BinaryOperator, d));
+    
+    lexer.Literal("&").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("|").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("^").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal(">>").Creates(d => new Token(TokenType.BinaryOperator, d));
+    lexer.Literal("<<").Creates(d => new Token(TokenType.BinaryOperator, d));
+
+    lexer.Literal("++").Creates(d => new Token(TokenType.UnaryOperator, d));
+    lexer.Literal("--").Creates(d => new Token(TokenType.UnaryOperator, d));
+
+    lexer.Literal("=>").Creates(d => new Token(TokenType.Arrow, d));
+    lexer.Literal(":").Creates(d => new Token(TokenType.Colon, d));
+    lexer.Literal(".").Creates(d => new Token(TokenType.Lookup, d));
+    lexer.Literal(",").Creates(d => new Token(TokenType.Seperator, d));
+    lexer.Literal(";").Creates(d => new Token(TokenType.LineEnd, d));
+
+    // Value literals
+    lexer.OpenClose(open: "\"", close: "\"", escape: "\\").Creates(data => new Token(TokenType.String, data));
+    lexer.OpenClose(open: "'", close: "'", escape: "\\").Creates(data => new Token(TokenType.String, data));
+    lexer.SequenceOf(char.IsDigit).Creates(data => new Token(TokenType.Integer, data));
+    lexer.Lambda(LexFloat).Creates(data => new Token(TokenType.Float, data));
+
+    // Comments
+    lexer.OpenClose("//", "\n").Creates(data => new Token(TokenType.Comment, data));
+    lexer.OpenClose("/*", "*/").Creates(data => new Token(TokenType.Comment, data));
+
+
+    var input = "\"this is a string with \\\"escaped\\\" characters.\" but this is 4 3.4 32.4352 35653.3423 ++ - + 8* ^ && => .,";
+    var result = lexer.Tokenize(input);
+    var output = result.Tokens.Select(x => x.Data).Aggregate((prev, current) => prev + current);
+
 
     if (!result.Succeeded)
     {
@@ -116,8 +215,26 @@ Test2();
 
 public enum TokenType
 {
+    Unknown,
+
     Keyword,
-    Operator,
+
+    UnaryOperator,
+    BinaryOperator,
+
+    Colon,
+    Seperator,
+    LineEnd,
+    Lookup,
+
+    Arrow,
+
+    BracketOpen,
+    BracketClose,
+    CurlyOpen,
+    CurlyClose,
+    ArrayOpen,
+    ArrayClose,
 
     String,
 

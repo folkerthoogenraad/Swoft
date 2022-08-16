@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TinyLex
 {
-    public class StringOffsetCharacterStream : ICharacterStream
+    public class StringOffsetCharacterStream : IStringSpanIterator
     {
         public string InputData { get; set; }
         public int Offset { get; set; }
@@ -27,9 +27,10 @@ namespace TinyLex
             return InputData[Offset];
         }
 
-        public void Next()
+        public bool Next()
         {
             Offset++;
+            return HasCurrent();
         }
 
         public bool HasNext()
@@ -42,15 +43,15 @@ namespace TinyLex
             return Offset < InputData.Length;
         }
 
-        public ICharacterStream Fork()
+        public IStringSpanIterator Fork()
         {
             return new StringOffsetCharacterStream(InputData, Offset);
         }
 
-        public char Next(int count)
+        public bool Next(int count)
         {
             Offset += count;
-            return Current();
+            return HasCurrent();
         }
     }
 }

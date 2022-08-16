@@ -6,12 +6,12 @@ namespace TinyLex
         where TToken: class
     {
         public int Precedence { get; }
-        public TToken? Tokenize(ICharacterStream stream);
+        public TToken? Tokenize(IStringSpanIterator stream);
     }
 
     public static class ITokenizerExtensions
     {
-        public static TToken? TryTokenize<TToken>(this ITokenizer<TToken> tokenizer, ICharacterStream stream)
+        public static TToken? TryTokenize<TToken>(this ITokenizer<TToken> tokenizer, IStringSpanIterator stream)
             where TToken: class
         {
             try
@@ -28,7 +28,7 @@ namespace TinyLex
         public int Precedence { get; set; } = 0;
         public Func<string, TToken>? Creator { get; set; }
 
-        public abstract TToken? Tokenize(ICharacterStream stream);
+        public abstract TToken? Tokenize(IStringSpanIterator stream);
 
         protected TToken Create(string data)
         {
@@ -41,7 +41,7 @@ namespace TinyLex
         }
 
         // TODO this is kinda ugly, we should move this.
-        protected bool MatchLiteral(ICharacterStream stream, string literal)
+        protected bool MatchLiteral(IStringSpanIterator stream, string literal)
         {
             for (int index = 0; index < literal.Length; index++, stream.Next())
             {
@@ -62,7 +62,7 @@ namespace TinyLex
             Literal = match;
         }
 
-        public override TToken? Tokenize(ICharacterStream stream)
+        public override TToken? Tokenize(IStringSpanIterator stream)
         {
             if (!MatchLiteral(stream, Literal))
             {
@@ -87,7 +87,7 @@ namespace TinyLex
             EscapeTokenizer = escape;
         }
 
-        public override TToken? Tokenize(ICharacterStream stream)
+        public override TToken? Tokenize(IStringSpanIterator stream)
         {
             var openResult = OpenTokenizer.TryTokenize(stream);
 
@@ -96,7 +96,6 @@ namespace TinyLex
             StringBuilder builder = new StringBuilder();
 
             builder.Append(openResult);
-            stream.Next();
 
             while (stream.HasCurrent())
             {
@@ -132,16 +131,20 @@ namespace TinyLex
     public class LamdaTokenizer<TToken> : SimpleTokenizer<TToken>
         where TToken : class
     {
-        public Func<ICharacterStream, TToken?> Func { get; set; }
+        public Func<IStringSpanIterator, string?> Func { get; set; }
 
-        public LamdaTokenizer(Func<ICharacterStream, TToken?> func)
+        public LamdaTokenizer(Func<IStringSpanIterator, string?> func)
         {
             Func = func;
         }
 
-        public override TToken? Tokenize(ICharacterStream stream)
+        public override TToken? Tokenize(IStringSpanIterator stream)
         {
-            return Func(stream);
+            var res = Func(stream);
+
+            if (res == null) return null;
+
+            return Create(res);
         }
     }
 
@@ -162,7 +165,7 @@ namespace TinyLex
             return this;
         }
 
-        public override TToken? Tokenize(ICharacterStream stream)
+        public override TToken? Tokenize(IStringSpanIterator stream)
         {
             if(_startsWith != null && !_startsWith(stream.Current()))
             {
@@ -218,6 +221,13 @@ namespace TinyLex
         {
             return lexer.AddTokenizer(new LiteralTokenizer<TToken>(literal));
         }
+
+        public static LamdaTokenizer<TToken> Lambda<TToken>(this Lexer<TToken> lexer, Func<IStringSpanIterator, string?> func)
+            where TToken : class
+        {
+            return lexer.AddTokenizer(new LamdaTokenizer<TToken>(func));
+        }
+
         public static OpenCloseTokenizer<TToken> OpenClose<TToken>(this Lexer<TToken> lexer, string open, string close, string escape)
             where TToken : class
         {

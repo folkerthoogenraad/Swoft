@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace TinyLex
 {
-    public interface ICharacterStream
+    public interface IStringSpanIterator
     {
         public int Offset { get; }
         public char Current();
-        public void Next();
+        public bool Next();
         public bool HasNext();
         public bool HasCurrent();
-        public char Next(int count);
-        public ICharacterStream Fork();
+        public bool Next(int count);
+        public IStringSpanIterator Fork();
     }
 }
