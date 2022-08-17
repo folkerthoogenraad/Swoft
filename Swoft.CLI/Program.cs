@@ -1,11 +1,13 @@
 ﻿
-using LLVMSharp;
+using Swoft.AST;
+using Swoft.Generator;
 using Swoft.Lex;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using TinyLex;
 
+#if false
 void Test()
 {
     LLVM.LinkInMCJIT();
@@ -52,7 +54,7 @@ void HelloWorld()
     // end
 
     // main function
-    LLVMTypeRef main_function_type = LLVM.FunctionType(int_32_type, null, false);
+    LLVMTypeRef main_function_type = LLVM.FunctionType(int_32_type, new LLVMTypeRef[0], false);
     LLVMValueRef main_function = LLVM.AddFunction(module, "main", main_function_type);
 
     LLVMBasicBlockRef entry = LLVM.AppendBasicBlockInContext(context, main_function, "entry");
@@ -68,14 +70,32 @@ void HelloWorld()
     LLVM.BuildRet(builder, LLVM.ConstInt(int_32_type, 0, false));
     // end
 
+    LLVM.VerifyModule(module, LLVMVerifierFailureAction.LLVMPrintMessageAction, out string message);
+
     LLVM.DumpModule(module); // dump module to STDOUT
-    //LLVMPrintModuleToFile(module, "hello.ll", nullptr);
+                             //LLVMPrintModuleToFile(module, "hello.ll", nullptr);
+
+    LLVMPassManagerRef pass = LLVMCreatePassManager();
+
+    LLVM.AddTargetLibraryInfo(, pass);
+
+    // Execution
+    LLVMExecutionEngineRef engine;
+    LLVMModuleProviderRef provider = LLVM.CreateModuleProviderForExistingModule(module);
+    
+    if (!LLVM.CreateJITCompilerForModule(out engine, module, 2, out string error))
+    {
+        Console.WriteLine("Failed to created jit compiler");
+    }
+
+    // LLVM.RunFunction(engine, main_function, new LLVMGenericValueRef[0]);
 
     // clean memory
     LLVM.DisposeBuilder(builder);
     LLVM.DisposeModule(module);
     LLVM.ContextDispose(context);
 }
+#endif
 
 
 void Test2()
@@ -103,6 +123,15 @@ void Test2()
     }
 
     //Console.WriteLine(JsonSerializer.Serialize(result.Tokens));
+
 }
 
-Test2();
+
+Expression print = new IdentifierExpression("print");
+Expression helloWorld = new StringExpression("hello world");
+
+CallExpression call = new CallExpression(print, new Expression[] {helloWorld});
+ExpressionStatement body = new ExpressionStatement(call);
+
+Generator generator = new Generator();
+generator.Generate(new Statement[] { body }, "HelloWorld.dll");
