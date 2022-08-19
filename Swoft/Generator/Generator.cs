@@ -1,9 +1,9 @@
-﻿using Swoft.AST;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Swoft.AST;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,7 +11,6 @@ namespace Swoft.Generator
 {
     public class Generator
     {
-#if false
         public void Generate(Statement[] statements, string outputFile)
         {
             var swoftDLL = AssemblyDefinition.ReadAssembly("Swoft.BCL.dll");
@@ -27,21 +26,25 @@ namespace Swoft.Generator
             var myHelloWorldApp = AssemblyDefinition.CreateAssembly(
                 new AssemblyNameDefinition("HelloWorld", new Version(1, 0, 0, 0)), "HelloWorld", ModuleKind.Console);
 
-            var corlibReference = new AssemblyNameReference("System.Runtime", new Version(6, 0, 0, 0))
+            var module = myHelloWorldApp.MainModule;
+
+            var coreLibraryReference = new AssemblyNameReference("System.Runtime", new Version(6, 0, 0, 0))
             {
                 PublicKeyToken = new byte[] { 0xb0, 0x3f, 0x5f, 0x7f, 0x11, 0xd5, 0x0a, 0x3a }
             };
 
-            var module = myHelloWorldApp.MainModule;
+            module.AssemblyReferences.Add(coreLibraryReference);
 
-            module.RuntimeVersion = "v6.0.0";
-            module.Runtime = TargetRuntime.Net_1_1;
-            module.AssemblyReferences.Add(corlibReference);
+            var targetFrameworkConstructor = module.ImportReference(typeof(System.Runtime.Versioning.TargetFrameworkAttribute).GetConstructor(new Type[] { typeof(string) }));
+            var customAttribute = new CustomAttribute(targetFrameworkConstructor);
 
+            customAttribute.ConstructorArguments.Add(new CustomAttributeArgument(module.ImportReference(typeof(string)), ".NETCoreApp,Version=v6.0"));
+
+            myHelloWorldApp.CustomAttributes.Add(customAttribute);
 
             // create the program type and add it to the module
             var programType = new TypeDefinition("HelloWorld", "Program",
-                Mono.Cecil.TypeAttributes.Class | Mono.Cecil.TypeAttributes.Public, corlibReference.types);
+                Mono.Cecil.TypeAttributes.Class | Mono.Cecil.TypeAttributes.Public);
 
             module.Types.Add(programType);
 
@@ -78,11 +81,16 @@ namespace Swoft.Generator
             il = mainMethod.Body.GetILProcessor();
 
             il.Append(il.Create(OpCodes.Nop));
-            il.Append(il.Create(OpCodes.Ldstr, "Hello World"));
 
             var writeLineCall = il.Create(OpCodes.Call, module.ImportReference(printMethod));
 
             // call the method
+            il.Append(il.Create(OpCodes.Ldstr, "Hello World"));
+            il.Append(writeLineCall);
+
+            il.Append(il.Create(OpCodes.Call, module.ImportReference(typeof(System.Environment).GetMethod("get_Version", new Type[] { }))));
+            il.Append(il.Create(OpCodes.Callvirt, module.ImportReference(typeof(object).GetMethod("ToString", new Type[] { }))));
+
             il.Append(writeLineCall);
 
             il.Append(il.Create(OpCodes.Nop));
@@ -90,43 +98,10 @@ namespace Swoft.Generator
 
             // set the entry point and save the module
             myHelloWorldApp.EntryPoint = mainMethod;
-            myHelloWorldApp.Write("HelloWorld.exe");
-        }
-#endif
-
-        public void Generate(Statement[] statements, string outputFile)
-        {
-            AssemblyName name = new AssemblyName();
-            name.Name = "Folkerts Hello World";
-            name.Version = new Version(0, 0, 1);
-
-            AssemblyBuilder builder = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndCollect);
-
-            var module = builder.DefineDynamicModule("HelloWorld");
-            var type = module.DefineType("Program");
-
-            var mainMethod = type.DefineMethod("Main", MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig, CallingConventions.Standard, typeof(void), new Type[]{typeof(string[])});
-
-            ILGenerator generator = mainMethod.GetILGenerator();
-
-            foreach(var exp in statements.OfType<ExpressionStatement>())
-            {
-                GenerateExpression(generator, exp.Expression);
-            }
-            generator.Emit(OpCodes.Ret);
-
-            var resolved = type.CreateType();
-            var assembly = Assembly.GetAssembly(resolved);
-
-            foreach(var assemblyType in assembly.GetTypes())
-            {
-                Console.WriteLine(assemblyType.FullName);
-            }
-
-            var writer = new Lokad.ILPack.AssemblyGenerator();
-            writer.GenerateAssembly(assembly, Array.Empty<Assembly>(), resolved.GetMethod("Main"), "HelloWorld.dll");
+            myHelloWorldApp.Write("HelloWorld.dll");
         }
 
+#if false
         public void GenerateExpression(ILGenerator generator, Expression expression)
         {
             GenerateExpressionInternal(generator, (dynamic)expression);
@@ -154,5 +129,6 @@ namespace Swoft.Generator
         {
             generator.Emit(OpCodes.Ldstr, exp.Value);
         }
+#endif
     }
 }

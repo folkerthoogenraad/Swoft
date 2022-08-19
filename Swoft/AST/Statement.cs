@@ -31,19 +31,46 @@ namespace Swoft.AST
         }
     }
 
+    public class TypeSyntax
+    {
+        public string Name { get; set; }
+
+        public TypeSyntax(string name)
+        {
+            Name = name;
+        }
+    }
+
+    public class NameAndTypeSyntax
+    {
+        public string Name { get; set; }
+        public TypeSyntax Type { get; set; }
+
+        public NameAndTypeSyntax(string name, TypeSyntax type)
+        {
+            Name = name;
+            Type = type;
+        }
+    }
+
     public class FunctionStatement : Statement
     {
         public string Name { get; set; }
-        // TODO add signature
+        public TypeSyntax? ReturnType { get; set; }
+        public IList<NameAndTypeSyntax> Parameters { get; set; }
         public Statement? Body { get; set; }
 
         public bool IsExtern { get; set; }
+        public bool IsStatic { get; set; }
 
-        public FunctionStatement(string name, Statement? body, bool isExtern)
+        public FunctionStatement(string name, Statement? body, bool isExtern, bool isStatic)
         {
             Name = name;
             Body = body;
             IsExtern = isExtern;
+            IsStatic = isStatic;
+            ReturnType = null;
+            Parameters = new List<NameAndTypeSyntax>();
         }
     }
 }

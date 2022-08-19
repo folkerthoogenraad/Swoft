@@ -56,14 +56,14 @@ namespace Swoft.AST
 
     public class CallExpression : Expression
     {
-        public Expression FunctionCall { get; set; }
+        public Expression Invoke { get; set; }
         public Expression[] Arguments { get; set; }
 
         // TODO generics
 
         public CallExpression(Expression functionCall, Expression[] arguments)
         {
-            FunctionCall = functionCall;
+            Invoke = functionCall;
             Arguments = arguments;
         }
     }
