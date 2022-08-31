@@ -11,7 +11,7 @@ namespace Swoft.Generator
 {
     public class Generator
     {
-        public void Generate(Statement[] statements, string outputFile)
+        public void Generate(StatementSyntax[] statements, string outputFile)
         {
             var swoftDLL = AssemblyDefinition.ReadAssembly("Swoft.BCL.dll");
             var swoftModule = swoftDLL.MainModule;

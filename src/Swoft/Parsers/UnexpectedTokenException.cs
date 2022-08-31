@@ -3,7 +3,7 @@
 using System.Text;
 using Swoft.Lex;
 
-namespace Swoft.Parser
+namespace Swoft.Parsers
 {
     public class UnexpectedTokenException : Exception
     {
@@ -65,6 +65,8 @@ namespace Swoft.Parser
 
                 builder.Append(" instead.");
             }
+
+            return builder.ToString();
         }
     }
 }

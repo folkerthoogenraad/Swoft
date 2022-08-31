@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Swoft.Parser
+namespace Swoft.Parsers
 {
     public class TokenStream
     {

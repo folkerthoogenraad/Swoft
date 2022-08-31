@@ -24,6 +24,7 @@ namespace Swoft.Lex
 
             // Keywords
             _lexer.Literal("function").Becomes(data => new Token(TokenType.KeywordFunction, data));
+            _lexer.Literal("var").Becomes(data => new Token(TokenType.KeywordVar, data));
             _lexer.Literal("struct").Becomes(data => new Token(TokenType.KeywordStruct, data));
             _lexer.Literal("procedure").Becomes(data => new Token(TokenType.KeywordProcedure, data));
             _lexer.Literal("if").Becomes(data => new Token(TokenType.KeywordIf, data));
@@ -33,6 +34,7 @@ namespace Swoft.Lex
             _lexer.Literal("await").Becomes(data => new Token(TokenType.KeywordAwait, data));
 
             _lexer.Literal("public").Becomes(data => new Token(TokenType.ModifierPublic, data));
+            _lexer.Literal("extern").Becomes(data => new Token(TokenType.ModifierExtern, data));
 
             // Identfiers
             _lexer.SequenceOf(char.IsLetterOrDigit)

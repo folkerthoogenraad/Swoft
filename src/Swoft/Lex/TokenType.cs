@@ -11,6 +11,7 @@ namespace Swoft.Lex
         Unknown,
 
         KeywordFunction,
+        KeywordVar,
         KeywordStruct,
         KeywordProcedure,
         KeywordIf,
@@ -20,6 +21,7 @@ namespace Swoft.Lex
         KeywordAwait,
 
         ModifierPublic,
+        ModifierExtern,
 
         OperatorAdd,
         OperatorSub,
@@ -147,6 +149,7 @@ namespace Swoft.Lex
             switch(type)
             {
                 case TokenType.ModifierPublic:
+                case TokenType.ModifierExtern:
                     return true;
                 default:
                     return false;

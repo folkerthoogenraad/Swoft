@@ -1,8 +1,11 @@
 ﻿
+using CommandLine;
 using Swoft.AST;
+using Swoft.Debug;
 using Swoft.Generator;
+using Swoft.IL;
 using Swoft.Lex;
-using Swoft.Parser;
+using Swoft.Parsers;
 using Swoft.Semantic;
 using System.Diagnostics;
 using System.Text;
@@ -99,51 +102,131 @@ void HelloWorld()
 }
 #endif
 
-
-void Test2()
+// This whole thing is super hacked and whatnot,
+// its just a proof of concept
+namespace Swoft.CLI
 {
-    SwoftLexer lexer = new SwoftLexer();
-
-    var input = "var str = \"this is a string.\";\nvar test = 43 + 4 * (4 + 2);";
-    var result = lexer.Tokenize(input);
-    var output = result.Tokens.Select(x => x.Data).Aggregate((prev, current) => prev + current);
-
-    Console.WriteLine(input);
-    Console.WriteLine();
-
-    if (!result.Succeeded)
+    [Verb("run")]
+    class CLIRunOptions
     {
-        foreach(var error in result.Errors)
+        [Value(0)]
+        public string? File { get; set; }
+
+        [Option('f', "frame", Required = false, HelpText = "Sets the frame file location to write")]
+        public string? FrameFile { get; set; }
+
+        [Option('h', "no-halt", Required = false, HelpText = "Sets halt to true or false.")]
+        public bool NoHalt { get; set; }
+    }
+
+    [Verb("resume")]
+    class CLIResumeOptions
+    {
+        [Value(0)]
+        public string? File { get; set; }
+
+        [Option('h', "no-halt", Required = false, HelpText = "Sets halt to true or false.")]
+        public bool NoHalt { get; set; }
+    }
+
+    class Program
+    {
+        public static void Main(string[] args)
         {
-            Console.WriteLine(error.Message);
+            var result = Parser.Default.ParseArguments<CLIRunOptions, CLIResumeOptions>(args);
+            
+            result.WithParsed<CLIRunOptions>(options => {
+                
+            });
+
+            result.WithParsed<CLIResumeOptions>(options => {
+            
+            });
+
+            string file = "..\\..\\..\\..\\..\\test\\helloworld.apx";
+            RunFile(file);
+        }
+
+        public ScopeSymbol ParseFile(string filename)
+        {
+            string input = File.ReadAllText(filename);
+
+            var lexer = new SwoftLexer();
+            var result = lexer.Tokenize(input);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine(error.Message);
+                }
+            }
+
+            var parser = new SwoftParser(result.Tokens);
+            var root = parser.ParseFile();
+
+            var semanticGenerator = new SemanticGenerator();
+            semanticGenerator.Analyze(root);
+
+            var table = semanticGenerator.Table;
+
+            var ilGenerator = new ILGenerator(table);
+            ilGenerator.GenerateIL(root);
+            ilGenerator.Commit();
+
+            return table.GetRootScope();
+        }
+
+        public static void RunFile(string filename)
+        {
+            string input = File.ReadAllText(filename);
+
+            var lexer = new SwoftLexer();
+            var result = lexer.Tokenize(input);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine(error.Message);
+                }
+            }
+
+            var parser = new SwoftParser(result.Tokens);
+            var root = parser.ParseFile();
+
+            var semanticGenerator = new SemanticGenerator();
+            semanticGenerator.Analyze(root);
+
+            var table = semanticGenerator.Table;
+
+            var ilGenerator = new ILGenerator(table);
+            ilGenerator.GenerateIL(root);
+            ilGenerator.Commit();
+
+            var rootScope = table.GetRootScope();
+
+            if (rootScope.ExecuteableCode != null)
+            {
+                //Console.WriteLine(ILDebug.ILToString(rootScope.ExecuteableCode));
+            }
+
+            var runtime = new DebugRuntime(rootScope);
+
+            runtime.NativeFunctions["print"] = (frame, arguments) => {
+                Console.WriteLine(arguments[0]);
+                return (null, true);
+            };
+            runtime.NativeFunctions["readLine"] = (frame, arguments) => {
+                var line = Console.ReadLine();
+                return (line, true);
+            };
+            runtime.NativeFunctions["halt"] = (frame, arguments) => {
+                Console.WriteLine("HALTING.");
+                return (null, false);
+            };
+
+            runtime.Run();
         }
     }
-
-    foreach (var token in result.Tokens)
-    {
-        Console.WriteLine(token.Type + " " + token.Data);
-    }
-
-    //Console.WriteLine(JsonSerializer.Serialize(result.Tokens));
 }
-
-void Parse(string input)
-{
-    var lexer = new SwoftLexer();
-    var result = lexer.Tokenize(input);
-
-    if (!result.Succeeded)
-    {
-        foreach (var error in result.Errors)
-        {
-            Console.WriteLine(error.Message);
-        }
-    }
-
-    var parser = new SwoftParser(result.Tokens);
-    var file = parser.ParseStatements();
-}
-
-string file = "D:\\Programmeren\\Projects\\C#\\Swoft\\test\\helloworld.apx";
-
-Parse(File.ReadAllText(file));
