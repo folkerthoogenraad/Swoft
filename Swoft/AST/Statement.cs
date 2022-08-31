@@ -44,9 +44,9 @@ namespace Swoft.AST
     public class NameAndTypeSyntax
     {
         public string Name { get; set; }
-        public TypeSyntax Type { get; set; }
+        public TypeSyntax? Type { get; set; }
 
-        public NameAndTypeSyntax(string name, TypeSyntax type)
+        public NameAndTypeSyntax(string name, TypeSyntax? type)
         {
             Name = name;
             Type = type;

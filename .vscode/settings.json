@@ -1,0 +1,9 @@
+{
+    "[csharp]": {
+        "editor.suggest.showReferences": false,
+        "editor.suggest.showInlineDetails": false,
+        "diffEditor.renderSideBySide": true,
+        "editor.inlineSuggest.enabled": false,
+        "editor.codeLens": false
+    }
+}

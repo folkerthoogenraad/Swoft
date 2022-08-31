@@ -7,7 +7,7 @@ using TinyLex;
 
 namespace Swoft.Lex
 {
-    public record class SwoftToken(SwoftTokenType Type, TokenInfo info)
+    public record class Token(TokenType Type, TokenInfo info)
     {
         public string Data => info.Data;
     }

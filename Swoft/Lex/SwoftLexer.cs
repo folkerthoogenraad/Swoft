@@ -10,86 +10,88 @@ namespace Swoft.Lex
 {
     public class SwoftLexer
     {
-        private DefaultLexer<SwoftToken> _lexer;
+        private DefaultLexer<Token> _lexer;
 
         public SwoftLexer()
         {
-            _lexer = new DefaultLexer<SwoftToken>();
+            _lexer = new DefaultLexer<Token>();
 
             // Error setup
-            _lexer.SetErrorProcessor(data => new SwoftToken(SwoftTokenType.Unknown, data));
+            _lexer.SetErrorProcessor(data => new Token(TokenType.Unknown, data));
 
             // Whitespace etc
-            _lexer.SequenceOf(char.IsWhiteSpace).Becomes(data => new SwoftToken(SwoftTokenType.Whitespace, data));
+            _lexer.SequenceOf(char.IsWhiteSpace).Becomes(data => new Token(TokenType.Whitespace, data));
 
             // Keywords
-            _lexer.Literal("function").Becomes(data => new SwoftToken(SwoftTokenType.Keyword, data));
-            _lexer.Literal("class").Becomes(data => new SwoftToken(SwoftTokenType.Keyword, data));
-            _lexer.Literal("struct").Becomes(data => new SwoftToken(SwoftTokenType.Keyword, data));
+            _lexer.Literal("function").Becomes(data => new Token(TokenType.KeywordFunction, data));
+            _lexer.Literal("struct").Becomes(data => new Token(TokenType.KeywordStruct, data));
+            _lexer.Literal("procedure").Becomes(data => new Token(TokenType.KeywordProcedure, data));
+            _lexer.Literal("if").Becomes(data => new Token(TokenType.KeywordIf, data));
+            _lexer.Literal("else").Becomes(data => new Token(TokenType.KeywordElse, data));
+            _lexer.Literal("while").Becomes(data => new Token(TokenType.KeywordWhile, data));
+            _lexer.Literal("when").Becomes(data => new Token(TokenType.KeywordWhen, data));
+            _lexer.Literal("await").Becomes(data => new Token(TokenType.KeywordAwait, data));
+
+            _lexer.Literal("public").Becomes(data => new Token(TokenType.ModifierPublic, data));
 
             // Identfiers
             _lexer.SequenceOf(char.IsLetterOrDigit)
                 .StartsWith(char.IsLetter)
-                .Becomes(data => new SwoftToken(SwoftTokenType.Identifier, data));
+                .Becomes(data => new Token(TokenType.Identifier, data));
 
             // Operators, etc
-            _lexer.Literal("(").Becomes(d => new SwoftToken(SwoftTokenType.BracketOpen, d));
-            _lexer.Literal(")").Becomes(d => new SwoftToken(SwoftTokenType.BracketClose, d));
-            _lexer.Literal("[").Becomes(d => new SwoftToken(SwoftTokenType.ArrayOpen, d));
-            _lexer.Literal("]").Becomes(d => new SwoftToken(SwoftTokenType.ArrayClose, d));
-            _lexer.Literal("{").Becomes(d => new SwoftToken(SwoftTokenType.CurlyOpen, d));
-            _lexer.Literal("}").Becomes(d => new SwoftToken(SwoftTokenType.CurlyClose, d));
+            _lexer.Literal("(").Becomes(d => new Token(TokenType.BracketOpen, d));
+            _lexer.Literal(")").Becomes(d => new Token(TokenType.BracketClose, d));
+            _lexer.Literal("[").Becomes(d => new Token(TokenType.ArrayOpen, d));
+            _lexer.Literal("]").Becomes(d => new Token(TokenType.ArrayClose, d));
+            _lexer.Literal("{").Becomes(d => new Token(TokenType.CurlyOpen, d));
+            _lexer.Literal("}").Becomes(d => new Token(TokenType.CurlyClose, d));
 
-            _lexer.Literal("+").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("-").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("*").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("/").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("%").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
+            _lexer.Literal("+").Becomes(d => new Token(TokenType.OperatorAdd, d));
+            _lexer.Literal("-").Becomes(d => new Token(TokenType.OperatorSub, d));
+            _lexer.Literal("*").Becomes(d => new Token(TokenType.OperatorMul, d));
+            _lexer.Literal("/").Becomes(d => new Token(TokenType.OperatorDiv, d));
+            _lexer.Literal("%").Becomes(d => new Token(TokenType.OperatorMod, d));
+            _lexer.Literal("=").Becomes(d => new Token(TokenType.OperatorEq, d));
+            _lexer.Literal("+=").Becomes(d => new Token(TokenType.OperatorEqAdd, d));
+            _lexer.Literal("-=").Becomes(d => new Token(TokenType.OperatorEqSub, d));
+            _lexer.Literal("*=").Becomes(d => new Token(TokenType.OperatorEqMul, d));
+            _lexer.Literal("/=").Becomes(d => new Token(TokenType.OperatorEqDiv, d));
+            _lexer.Literal("%=").Becomes(d => new Token(TokenType.OperatorEqMod, d));
+            _lexer.Literal("==").Becomes(d => new Token(TokenType.OperatorIsEq, d));
+            _lexer.Literal(">").Becomes(d => new Token(TokenType.OperatorIsGt, d));
+            _lexer.Literal("<").Becomes(d => new Token(TokenType.OperatorIsLt, d));
+            _lexer.Literal(">=").Becomes(d => new Token(TokenType.OperatorIsGtEq, d));
+            _lexer.Literal("<=").Becomes(d => new Token(TokenType.OperatorIsLtEq, d));
+            _lexer.Literal("||").Becomes(d => new Token(TokenType.OperatorOr, d));
+            _lexer.Literal("&&").Becomes(d => new Token(TokenType.OperatorAnd, d));
+            _lexer.Literal("!").Becomes(d => new Token(TokenType.OperatorNot, d));
+            _lexer.Literal("&").Becomes(d => new Token(TokenType.OperatorBitwiseAnd, d));
+            _lexer.Literal("|").Becomes(d => new Token(TokenType.OperatorBitwiseOr, d));
+            _lexer.Literal("^").Becomes(d => new Token(TokenType.OperatorBitwiseNot, d));
+            _lexer.Literal(">>").Becomes(d => new Token(TokenType.OperatorBitwiseShiftRight, d));
+            _lexer.Literal("<<").Becomes(d => new Token(TokenType.OperatorBitwiseShiftLeft, d));
+            _lexer.Literal("++").Becomes(d => new Token(TokenType.OperatorAddOne, d));
+            _lexer.Literal("--").Becomes(d => new Token(TokenType.OperatorSubOne, d));
 
-            _lexer.Literal("=").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("+=").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("-=").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("*=").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("/=").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("%=").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-
-            _lexer.Literal("==").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal(">").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("<").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal(">=").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("<=").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-
-            _lexer.Literal("||").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("&&").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("!").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-
-            _lexer.Literal("&").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("|").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("^").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal(">>").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-            _lexer.Literal("<<").Becomes(d => new SwoftToken(SwoftTokenType.BinaryOperator, d));
-
-            _lexer.Literal("++").Becomes(d => new SwoftToken(SwoftTokenType.UnaryOperator, d));
-            _lexer.Literal("--").Becomes(d => new SwoftToken(SwoftTokenType.UnaryOperator, d));
-
-            _lexer.Literal("=>").Becomes(d => new SwoftToken(SwoftTokenType.Arrow, d));
-            _lexer.Literal(":").Becomes(d => new SwoftToken(SwoftTokenType.Colon, d));
-            _lexer.Literal(".").Becomes(d => new SwoftToken(SwoftTokenType.Lookup, d));
-            _lexer.Literal(",").Becomes(d => new SwoftToken(SwoftTokenType.Seperator, d));
-            _lexer.Literal(";").Becomes(d => new SwoftToken(SwoftTokenType.LineEnd, d));
+            _lexer.Literal("=>").Becomes(d => new Token(TokenType.Arrow, d));
+            _lexer.Literal(":").Becomes(d => new Token(TokenType.Colon, d));
+            _lexer.Literal(".").Becomes(d => new Token(TokenType.Lookup, d));
+            _lexer.Literal(",").Becomes(d => new Token(TokenType.Seperator, d));
+            _lexer.Literal(";").Becomes(d => new Token(TokenType.LineEnd, d));
 
             // Value literals
-            _lexer.OpenClose(open: "\"", close: "\"", escape: "\\").Becomes(data => new SwoftToken(SwoftTokenType.String, data));
-            _lexer.OpenClose(open: "'", close: "'", escape: "\\").Becomes(data => new SwoftToken(SwoftTokenType.String, data));
-            _lexer.SequenceOf(char.IsDigit).Becomes(data => new SwoftToken(SwoftTokenType.Integer, data));
-            _lexer.Lambda(TryLexFloat).Becomes(data => new SwoftToken(SwoftTokenType.Float, data));
+            _lexer.OpenClose(open: "\"", close: "\"", escape: "\\").Becomes(data => new Token(TokenType.String, data));
+            _lexer.OpenClose(open: "'", close: "'", escape: "\\").Becomes(data => new Token(TokenType.String, data));
+            _lexer.SequenceOf(char.IsDigit).Becomes(data => new Token(TokenType.Integer, data));
+            _lexer.Lambda(TryLexFloat).Becomes(data => new Token(TokenType.Float, data));
 
             // Comments
-            _lexer.OpenClose("//", "\n").Becomes(data => new SwoftToken(SwoftTokenType.Comment, data));
-            _lexer.OpenClose("/*", "*/").Becomes(data => new SwoftToken(SwoftTokenType.Comment, data));
+            _lexer.OpenClose("//", "\n").Becomes(data => new Token(TokenType.Comment, data));
+            _lexer.OpenClose("/*", "*/").Becomes(data => new Token(TokenType.Comment, data));
         }
 
-        public LexerOutput<SwoftToken> Tokenize(string input)
+        public LexerOutput<Token> Tokenize(string input)
         {
             return _lexer.Tokenize(input);
         }

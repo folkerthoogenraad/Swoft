@@ -2,6 +2,7 @@
 using Swoft.AST;
 using Swoft.Generator;
 using Swoft.Lex;
+using Swoft.Parser;
 using Swoft.Semantic;
 using System.Diagnostics;
 using System.Text;
@@ -124,67 +125,25 @@ void Test2()
     }
 
     //Console.WriteLine(JsonSerializer.Serialize(result.Tokens));
-
 }
 
-
-// Syntax tree
-IdentifierExpression print = new IdentifierExpression("print");
-StringExpression helloWorld = new StringExpression("hello world");
-
-CallExpression call = new CallExpression(print, new Expression[] {helloWorld});
-ExpressionStatement body = new ExpressionStatement(call);
-
-FunctionStatement printFunction = new FunctionStatement("print", body: null, isExtern: true, isStatic: true);
-FunctionStatement mainFunction = new FunctionStatement("__main", body, isExtern: true, isStatic: true);
-
-// Backbone model stuff
-AssemblyDefinition assembly = new AssemblyDefinition();
-
-assembly.Structs.Add(new StructDefinition(assembly, "string"));
-assembly.Structs.Add(new StructDefinition(assembly, "float"));
-assembly.Structs.Add(new StructDefinition(assembly, "int"));
-
-var printFunctionSignature = new FunctionSignature(new VoidTypeReference());
-printFunctionSignature.Parameters.Add(new StructTypeReference(assembly.ResolveStructsByName("string").First()));
-
-var mainFunctionSignature = new FunctionSignature(new VoidTypeReference());
-
-FunctionDefinition printFunctionDefinition = new FunctionDefinition(assembly, printFunction.Name, printFunctionSignature);
-FunctionDefinition mainFunctionDefinition = new FunctionDefinition(assembly, mainFunction.Name, mainFunctionSignature);
-
-// Symbols
-var symbolTable = new SymbolTable();
-
-symbolTable.FunctionDefinitions.Add(printFunction, printFunctionDefinition);
-symbolTable.FunctionDefinitions.Add(mainFunction, mainFunctionDefinition);
-
+void Parse(string input)
 {
-    var expressionSymbol = new ExpressionSymbol();
-    var functions = assembly.ResolveFunctionsByName(print.Identifier);
+    var lexer = new SwoftLexer();
+    var result = lexer.Tokenize(input);
 
-    foreach(var function in functions)
+    if (!result.Succeeded)
     {
-        var typeA = new FunctionTypeReference(function);
-        var typeB = new LambdaTypeReference(function.Signature);
-
-        expressionSymbol.CandidateTypes.Add(typeA);
-        expressionSymbol.CandidateTypes.Add(typeB);
+        foreach (var error in result.Errors)
+        {
+            Console.WriteLine(error.Message);
+        }
     }
 
-    expressionSymbol.ResolvedType = expressionSymbol.CandidateTypes.FirstOrDefault();
+    var parser = new SwoftParser(result.Tokens);
+    var file = parser.ParseStatements();
 }
 
-{
-    var expressionSymbol = new ExpressionSymbol();
-    var typeA = new StructTypeReference(assembly.ResolveStructsByName("string").First());
+string file = "D:\\Programmeren\\Projects\\C#\\Swoft\\test\\helloworld.apx";
 
-    expressionSymbol.CandidateTypes.Add(typeA);
-
-    expressionSymbol.ResolvedType = typeA;
-
-    symbolTable.ExpressionSymbols.Add(helloWorld, expressionSymbol);
-}
-
-// Generator generator = new Generator();
-// generator.Generate(new Statement[] { body }, "HelloWorld.dll");
+Parse(File.ReadAllText(file));
