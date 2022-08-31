@@ -27,6 +27,7 @@ namespace Swoft.Lex
             _lexer.Literal("var").Becomes(data => new Token(TokenType.KeywordVar, data));
             _lexer.Literal("struct").Becomes(data => new Token(TokenType.KeywordStruct, data));
             _lexer.Literal("procedure").Becomes(data => new Token(TokenType.KeywordProcedure, data));
+            _lexer.Literal("return").Becomes(data => new Token(TokenType.KeywordReturn, data));
             _lexer.Literal("if").Becomes(data => new Token(TokenType.KeywordIf, data));
             _lexer.Literal("else").Becomes(data => new Token(TokenType.KeywordElse, data));
             _lexer.Literal("while").Becomes(data => new Token(TokenType.KeywordWhile, data));

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Swoft.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "run test.swf"
+    }
+  }
+}

@@ -31,7 +31,11 @@ namespace Swoft.AST.Visitor
         }
 
         // Statements
-        public virtual void Visit(ExpressionStatement statement)
+        public virtual void Visit(ExpressionStatementSyntax statement)
+        {
+            statement.Expression.Accept(this);
+        }
+        public virtual void Visit(ReturnStatementSyntax statement)
         {
             statement.Expression.Accept(this);
         }

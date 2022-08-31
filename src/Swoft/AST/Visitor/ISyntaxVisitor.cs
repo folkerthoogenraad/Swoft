@@ -16,7 +16,8 @@ namespace Swoft.AST.Visitor
         public void Visit(FileSyntax exp);
 
         // Statements
-        public void Visit(ExpressionStatement statement);
+        public void Visit(ExpressionStatementSyntax statement);
+        public void Visit(ReturnStatementSyntax statement);
         public void Visit(BlockStatementSyntax statement);
         public void Visit(IfStatementSyntax statement);
         public void Visit(ElseStatementSyntax statement);

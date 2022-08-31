@@ -38,8 +38,14 @@ namespace Swoft.Generator
             }
         }
 
-        public void Visit(ExpressionStatement statement)
+        public void Visit(ExpressionStatementSyntax statement)
         {
+            Write(statement.Expression);
+            WriteLine(";");
+        }
+        public void Visit(ReturnStatementSyntax statement)
+        {
+            WriteLine("return ");
             Write(statement.Expression);
             WriteLine(";");
         }

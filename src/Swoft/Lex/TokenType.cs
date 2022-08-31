@@ -19,6 +19,7 @@ namespace Swoft.Lex
         KeywordWhile,
         KeywordWhen,
         KeywordAwait,
+        KeywordReturn,
 
         ModifierPublic,
         ModifierExtern,
@@ -88,6 +89,7 @@ namespace Swoft.Lex
                 case TokenType.KeywordElse:
                 case TokenType.KeywordWhile:
                 case TokenType.KeywordWhen:
+                case TokenType.KeywordReturn:
                 case TokenType.KeywordAwait:
                     return true;
 

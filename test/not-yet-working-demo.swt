@@ -1,0 +1,29 @@
+extern function createJob(): Job;
+extern function print(content: string): void;
+
+extern function JobEvent::FetchNext(): JobEvent;
+extern function JobEvent::Requeue(event: JobEvent): void;
+
+function waitForJobCompletion(jobId: string){
+	while(true){
+		// Lang note:
+		// Maybe only allow blocking things with the await keyword for clarity?
+		// Await and when and stuff?
+		
+		// Get an event
+		var event = JobEvent::FetchNext();
+		
+		if(event.jobId == jobId){
+			return;
+		}
+		
+		// Requeue the event if we didn't succeed.
+		JobEvent::Requeue(event);
+	}
+}
+
+var job = createJob();
+
+waitForJobCompletion(job.id);
+
+print("Job completed!");

@@ -66,6 +66,12 @@ namespace Swoft.IL
 
             PushScope(targetScope);
 
+            foreach(var param in statement.Parameters)
+            {
+                _writer.WriteIL(ILCode.StoreVariable);
+                _writer.WriteString(param.Name);
+            }
+
             base.Visit(statement);
             // HAck because we don't have anything to return
             _writer.WriteIL(ILCode.Return);
@@ -73,7 +79,15 @@ namespace Swoft.IL
             PopScope();
 
         }
-        public override void Visit(ExpressionStatement statement)
+        public override void Visit(ReturnStatementSyntax statement)
+        {
+            Debug.Assert(_writer != null);
+
+            base.Visit(statement);
+
+            _writer.WriteIL(ILCode.Return);
+        }
+        public override void Visit(ExpressionStatementSyntax statement)
         {
             Debug.Assert(_writer != null);
 

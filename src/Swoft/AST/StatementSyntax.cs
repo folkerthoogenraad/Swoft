@@ -34,11 +34,26 @@ namespace Swoft.AST
         }
     }
 
-    public class ExpressionStatement : StatementSyntax
+    public class ExpressionStatementSyntax : StatementSyntax
     {
         public ExpressionSyntax Expression { get; set; }
 
-        public ExpressionStatement(ExpressionSyntax expression)
+        public ExpressionStatementSyntax(ExpressionSyntax expression)
+        {
+            Expression = expression;
+        }
+
+        public override void Accept(ISyntaxVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
+
+    public class ReturnStatementSyntax : StatementSyntax
+    {
+        public ExpressionSyntax Expression { get; set; }
+
+        public ReturnStatementSyntax(ExpressionSyntax expression)
         {
             Expression = expression;
         }

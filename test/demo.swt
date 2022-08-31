@@ -1,0 +1,23 @@
+extern function print(content: string): void;
+extern function readLine(): string;
+extern function halt(): void;
+
+function hello(){
+	halt(); // notice this halt!!!
+	print("resuming");
+	
+	return "Hello world";
+}
+
+function test(){
+	return hello();
+}
+
+function withParams(a, b){
+	print(a);
+	print(test());
+	halt();
+	print(b);
+}
+
+withParams("Uno!", "Dos!");

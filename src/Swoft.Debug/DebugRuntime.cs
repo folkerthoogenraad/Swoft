@@ -7,21 +7,38 @@ namespace Swoft.Debug
 {
     public class StackFrame
     {
-        public StackFrame? Parent;
-        public Dictionary<string, object?> Variables = new Dictionary<string, object?>();
-        public Stack<object?> Stack = new Stack<object?>();
-        public long Offset = 0;
+        public StackFrame? Parent { get; set; }
+        public Dictionary<string, object?> Variables { get; set; } = new Dictionary<string, object?>();
+        public Stack<object?> Stack { get; set; } = new Stack<object?>();
+        public long Offset { get; set; } = 0;
 
         // Honestly scope identifiers could also be programmatically assigned to the symbol table somewhere
         // That might be easier than whatever this is currently, but whatever.
         // Then we can keep an hashmap in the symboltable as well, making lookups easier.
         // Its basically just a list of executable code in a table somewhere :)
-        public string SymbolScopePath;
+        public string SymbolScopePath { get; set; }
 
         public StackFrame(StackFrame? parent = null)
         {
             Parent = parent;
             SymbolScopePath = "";
+        }
+
+        // Todo this resolving is obviously flawed, it different from the resovling in the type checking and should
+        // be treated as different.
+        public object? GetVariableValue(string name)
+        {
+            if (Variables.ContainsKey(name))
+            {
+                return Variables[name];
+            }
+
+            if(Parent == null)
+            {
+                throw new InvalidOperationException("No variable with this name!");
+            }
+
+            return Parent.GetVariableValue(name);
         }
     }
 
@@ -34,8 +51,6 @@ namespace Swoft.Debug
         {
             Root = root;
             NativeFunctions = new Dictionary<string, Func<StackFrame, object?[], (object? Result, bool ShouldContinue)>>();
-
-            
         }
 
         public void Run()
@@ -71,7 +86,7 @@ namespace Swoft.Debug
                         frame.Stack.Push(reader.ReadInt());
                         break;
                     case ILCode.PushVariable:
-                        frame.Stack.Push(frame.Variables[reader.ReadString()]);
+                        frame.Stack.Push(frame.GetVariableValue (reader.ReadString()));
                         break;
                     case ILCode.PushFunction:
                         string name = reader.ReadString();
@@ -135,8 +150,19 @@ namespace Swoft.Debug
                         // Invoke non native
                         else
                         {
-                            // TODO jumping to other function
-                            frame.Stack.Push(null);
+                            frame.Offset = reader.Offset;
+
+                            // Switch to other frame
+                            scope = function;
+                            reader = new ILReader(scope.ExecuteableCode!);
+                            frame = new StackFrame(frame);
+
+                            for (int i = 0; i < argumentCount; i++)
+                            {
+                                frame.Stack.Push(arguments[i]);
+                            }
+
+                            frame.SymbolScopePath = ScopePath.Create(scope);
                         }
 
                         break;

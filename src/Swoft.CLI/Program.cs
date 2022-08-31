@@ -112,9 +112,6 @@ namespace Swoft.CLI
         [Value(0)]
         public string? File { get; set; }
 
-        [Option('f', "frame", Required = false, HelpText = "Sets the frame file location to write")]
-        public string? FrameFile { get; set; }
-
         [Option('h', "no-halt", Required = false, HelpText = "Sets halt to true or false.")]
         public bool NoHalt { get; set; }
     }
@@ -136,18 +133,21 @@ namespace Swoft.CLI
             var result = Parser.Default.ParseArguments<CLIRunOptions, CLIResumeOptions>(args);
             
             result.WithParsed<CLIRunOptions>(options => {
-                
+                var runtime = ParseFile(options.File!, !options.NoHalt);
+
+                runtime.Run();
             });
 
             result.WithParsed<CLIResumeOptions>(options => {
-            
-            });
+                var runtime = ParseFile(options.File!, !options.NoHalt);
 
-            string file = "..\\..\\..\\..\\..\\test\\helloworld.apx";
-            RunFile(file);
+                var frame = JsonSerializer.Deserialize<Debug.StackFrame>(File.ReadAllText(options.File! + ".frame"));
+
+                runtime.Resume(frame!);
+            });
         }
 
-        public ScopeSymbol ParseFile(string filename)
+        public static DebugRuntime ParseFile(string filename, bool haltAndDump = true)
         {
             string input = File.ReadAllText(filename);
 
@@ -174,7 +174,36 @@ namespace Swoft.CLI
             ilGenerator.GenerateIL(root);
             ilGenerator.Commit();
 
-            return table.GetRootScope();
+            var rootScope = table.GetRootScope();
+
+            var runtime = new DebugRuntime(rootScope);
+
+            runtime.NativeFunctions["print"] = (frame, arguments) => {
+                Console.WriteLine(arguments[0]);
+                return (null, true);
+            };
+            runtime.NativeFunctions["readLine"] = (frame, arguments) => {
+                var line = Console.ReadLine();
+                return (line, true);
+            };
+            runtime.NativeFunctions["halt"] = (frame, arguments) => {
+                if (haltAndDump)
+                {
+                    // Push empty :)
+
+                    // This would not be nessesary if you want your halting function to return anything
+                    // Then you'd push that just before resuming execution above.
+                    // Lets say for example you'd want to resume after a halt with some new information. An event, a string, whatever.
+                    frame.Stack.Push(null);
+
+                    // Dump the frame
+                    File.WriteAllText(filename + ".frame", JsonSerializer.Serialize(frame));
+                }
+
+                return (null, !haltAndDump);
+            };
+
+            return runtime;
         }
 
         public static void RunFile(string filename)

@@ -1,0 +1,12 @@
+extern function print(content: string): void;
+extern function readLine(): string;
+extern function halt(): void;
+
+print("Give me your name");
+
+var line = readLine();
+
+halt();
+
+print("You are");
+print(line);

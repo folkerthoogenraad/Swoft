@@ -63,6 +63,10 @@ namespace Swoft.Parsers
             {
                 return ParseIfStatement();
             }
+            else if (current.Type == TokenType.KeywordReturn)
+            {
+                return ParseReturnStatement();
+            }
             else
             {
                 return ParseExpressionStatement();
@@ -218,13 +222,24 @@ namespace Swoft.Parsers
             return ParseExpression(precedence - 1);
         }
 
-        public ExpressionStatement ParseExpressionStatement()
+        public ReturnStatementSyntax ParseReturnStatement()
+        {
+            ExpectAndComsume(TokenType.KeywordReturn);
+
+            var expression = ParseExpression();
+
+            ExpectAndComsume(TokenType.LineEnd);
+
+            return new ReturnStatementSyntax(expression);
+        }
+
+        public ExpressionStatementSyntax ParseExpressionStatement()
         {
             var expression = ParseExpression();
 
             ExpectAndComsume(TokenType.LineEnd);
 
-            return new ExpressionStatement(expression);
+            return new ExpressionStatementSyntax(expression);
         }
 
         public FunctionStatementSyntax ParseFunction(ModifiersSyntax? modifiers)

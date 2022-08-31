@@ -20,7 +20,10 @@ namespace Swoft.AST.Visitor
         public virtual void Visit(FileSyntax file)
         {
         }
-        public virtual void Visit(ExpressionStatement statement)
+        public virtual void Visit(ExpressionStatementSyntax statement)
+        {
+        }
+        public virtual void Visit(ReturnStatementSyntax statement)
         {
         }
         public virtual void Visit(BlockStatementSyntax statement)

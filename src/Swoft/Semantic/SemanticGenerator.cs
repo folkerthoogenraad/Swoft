@@ -48,7 +48,12 @@ namespace Swoft.Semantic
             }
         }
 
-        public void Visit(ExpressionStatement statement)
+        public void Visit(ExpressionStatementSyntax statement)
+        {
+            // For now we don't analyze expressions.
+            // Analyze(statement.Expression);
+        }
+        public void Visit(ReturnStatementSyntax statement)
         {
             // For now we don't analyze expressions.
             // Analyze(statement.Expression);
